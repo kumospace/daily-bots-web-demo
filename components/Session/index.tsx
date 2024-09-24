@@ -18,6 +18,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import Agent from "./Agent";
 import Stats from "./Stats";
 import UserMicBubble from "./UserMicBubble";
+import TranscriptOverlay, { TranscriptText } from "./TranscriptOverlay";
 
 let stats_aggregator: StatsAggregator;
 
@@ -175,7 +176,7 @@ export const Session = React.memo(
             document.getElementById("tray")!
           )}
 
-        <div className="flex-1 flex flex-col items-center justify-center w-full">
+        <div className="flex-1 flex flex-col items-center justify-center w-full" style={{position: 'relative'}}>
           <Card.Card
             fullWidthMobile={false}
             className="w-full max-w-[320px] sm:max-w-[420px] mt-auto shadow-long"
@@ -190,6 +191,9 @@ export const Session = React.memo(
             muted={muted}
             handleMute={() => toggleMute()}
           />
+          <div style={{position: 'absolute', top: 0, right: 0, width: 400, height: '100%', overflow: 'auto'}}>
+            <TranscriptText />
+          </div>
         </div>
 
         <footer className="w-full flex flex-row mt-auto self-end md:w-auto">

@@ -1,20 +1,44 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { VoiceEvent } from "realtime-ai";
+import { Transcript, VoiceEvent } from "realtime-ai";
 import { useVoiceClientEvent } from "realtime-ai-react";
 
 import styles from "./styles.module.css";
+
+export function TranscriptText() {
+  const [transcripts, setTranscripts] = useState<Record<string, {type: 'bot' | 'user', text: string, timestamp: string}>>({});
+
+  useVoiceClientEvent(
+    VoiceEvent.BotTranscript,
+    useCallback((text: string) => {
+      setTranscripts((transcripts) => {
+        const timestamp = new Date().toISOString();
+        return {...transcripts, [timestamp]: {type: 'bot', text, timestamp}};
+      });
+    }, [])
+  );
+
+  useVoiceClientEvent(
+    VoiceEvent.UserTranscript,
+    useCallback((transcript: Transcript) => {
+      if (!transcript.final) {
+        return;
+      }
+
+      setTranscripts((transcripts) => {
+        return {...transcripts, [transcript.timestamp]: {type: 'user', ...transcript}};
+      });
+    }, [])
+  );
+
+  return <>{Object.values(transcripts).toSorted((a, b) => a.timestamp.localeCompare(b.timestamp)).map((sentence) => (
+    <div key={sentence.timestamp}>{sentence.type}: {sentence.text.trim()}</div>
+  ))}</>
+}
 
 const TranscriptOverlay: React.FC = () => {
   const [sentences, setSentences] = useState<string[]>([]);
   const [sentencesBuffer, setSentencesBuffer] = useState<string[]>([]);
   const displayIntervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  useVoiceClientEvent(
-    VoiceEvent.BotTranscript,
-    useCallback((text: string) => {
-      setSentencesBuffer((s) => [...s, text.trim()]);
-    }, [])
-  );
 
   useEffect(() => {
     if (sentencesBuffer.length > 0) {
